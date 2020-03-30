@@ -4,7 +4,7 @@
 function getAvailItemCount($item)
 {
     include "db.php";
-    $items=mysqli_query($conn,"select sum(qty) as `avail` from order_list where item='$item' and  (status='0' or status='2') group by item");//1 for delivered item,0 pending ,2 cancel order
+    $items=mysqli_query($conn,"select sum(qty) as `avail` from order_list where item='$item' and  (status='0' or status='1') group by item");//1 for delivered item,0 pending ,2 cancel order
 
    $row= mysqli_fetch_array($items);
 
