@@ -29,21 +29,34 @@ if($_GET['type']==1)
 }
 
 
-//add order
-if($_GET['type']==2)
+function addOrder($order_id,$card_no,$itm,$qty)
 {
-
-    $order_id=$_GET['order_id'];
-    $card_no=$_GET['card_no'];
-    $itm=$_GET['itm'];
-    $qty=$_GET['qty'];
 
     include "db.php";
 
     $result=mysqli_query($conn,"insert into order_list (order_id,card_no,item,qty) values ('$order_id','$card_no','$itm','$qty')");
-    
+
     if($result)
-    echo "0";else echo "-1";
+        echo "0";else "-1";
+}
+//add order
+if($_GET['type']==2)
+{
+
+    $order_id=rand(1,10000);
+    $card_no=$_GET['card_no'];
+    $itm=$_GET['item'];
+    $qty=$_GET['qty'];
+
+    foreach ($itm as $key=>$item)
+    {
+
+        addOrder($order_id, $card_no,$item,$qty[$key]);
+
+
+    }
+
+
 
 }
 
