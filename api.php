@@ -1,6 +1,16 @@
 <?php
 
 
+function getAvailItemCount($item)
+{
+    include "db.php";
+    $items=mysqli_query($conn,"select sum(qty) as `avail` from order_list where item='$item' and  (status='0' or status='2') group by item");//1 for delivered item,0 pending ,2 cancel order
+
+   $row= mysqli_fetch_array($items);
+
+return $row['avail'];
+}
+
 //show item
 if($_GET['type']==1)
 {
@@ -12,6 +22,7 @@ if($_GET['type']==1)
 
 	while($row1= mysqli_fetch_assoc($items))
 		{
+           $row1['avail']=$row1['qty']-getAvailItemCount($row1['name']);
 			array_push($a, $row1);
 		}
 	echo json_encode($a);
