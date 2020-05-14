@@ -37,7 +37,7 @@ function addOrder($order_id,$card_no,$itm,$qty)
     $result=mysqli_query($conn,"insert into order_list (order_id,card_no,item,qty) values ('$order_id','$card_no','$itm','$qty')");
 
     if($result)
-        echo "0";else "-1";
+       return "0";else return "-1";
 }
 //add order
 if($_GET['type']==2)
@@ -47,13 +47,17 @@ if($_GET['type']==2)
     $card_no=$_GET['card_no'];
     $itm=$_GET['item'];
     $qty=$_GET['qty'];
-
+$flag=-1;
     foreach ($itm as $key=>$item)
     {
 
-        addOrder($order_id, $card_no,$item,$qty[$key]);
+       $flag= addOrder($order_id, $card_no,$item,$qty[$key]);
 
 
+    }
+    if($flag==0)
+    {
+        echo "Order place successfully with Reference Order ID:".$order_id;
     }
 
 
