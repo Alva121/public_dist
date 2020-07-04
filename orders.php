@@ -13,6 +13,12 @@ session_destroy();
 header("location:index.php");
 }
 
+if(isset($_GET['deliverorder']))
+{
+    $id=$_GET['deliverorder'];
+    deliverorder($id);
+}
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -25,6 +31,9 @@ header("location:index.php");
 <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
 <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
+<script src="js/mqtt.js"></script>
 
 <style>
 	.card
@@ -72,10 +81,23 @@ margin-top: 20px;
 </nav>
 	<div class="container-fluid">
 		<div class="row">
+    <div class="col-1">
+    </div> 
     <div class="col-2">
+      <div id="status"></div>
+            <div class="card">
+        <div class="card-header">
+          <h3>Pump</h3>
+        </div>
+        <div class="card-header">
+          <a href="#" class="btn btn-success" onclick="onSend('a');">ON</a>
+          <a href="#" class="btn btn-danger" onclick="onSend('b');">OFF</a>
+        </div>
+      </div>
     </div> 
     <div class="col-8">
       <div class="card">
+        <div class="card-header"><h3>Order List</h3></div>
         <div class="card-header">
                     <table id="example" class="table table-striped table-bordered">
                         <thead>
@@ -95,7 +117,7 @@ margin-top: 20px;
         </div>
       </div>
     </div> 
-    <div class="col-2"></div>
+    <div class="col-1"></div>
     </div>
   </div>
 </body>
@@ -104,5 +126,244 @@ margin-top: 20px;
     {
     $('#example').DataTable();
     });
+
+
+
+$('#main').show();
+$('#vote').hide();
+$('#reg').hide();
+var fid;
+var rc;
+  
+  var mqtt;
+    var reconnectTimeout = 1000;
+    var host,port;
+     var username;
+     var password;
+    function MQTTconnect() {
+   
+
+
+    host='broker.mqttdashboard.com';
+    port=8000;
+  if (typeof path == "undefined") {
+    path = '/mqtt';
+  }
+  mqtt = new Paho.MQTT.Client(host,parseInt(port),
+      path,
+      "web_" + parseInt(Math.random() * 100, 10)
+  );
+        var options = {
+            timeout: 60,
+            useSSL: false,
+            cleanSession:true,
+            onSuccess: onConnect,
+            onFailure: function (message) {
+              $('#status').html("server:fail to connect");
+            }
+        }
+        mqtt.onConnectionLost = onConnectionLost;
+        mqtt.onMessageArrived = onMessageArrived;
+
+        if (username != null) {
+            options.userName = username;
+            options.password = password;
+        }
+       // console.log("Host="+ host + ", port=" + port + ", path=" + path + " TLS = " + useTLS + " username=" + username + " password=" + password);
+  try{
+        mqtt.disconnect();
+      }catch(e){}finally{
+        mqtt.connect(options);
+      }
+      
+
+    }
+
+    function onConnect() {
+        $('#status').html("server:connected");
+       //  $('#gif-mp4').play();
+     //  alert('Connected to ' + host + ':' + port + path);
+        // Connection succeeded; subscribe to our topic
+    //    mqtt.subscribe("slekin/fingerprint", {qos: 0});
+         //mqtt.subscribe("VCET_IOT/temp", {qos: 0});
+        rc=true;
+      
+    }
+
+    function onConnectionLost(response) {
+     
+       $('#status').html("server:connect lost");
+     
+        setTimeout(MQTTconnect, reconnectTimeout);
+       
+      
+     
+    };
+  
+    function onMessageArrived(message) {
+
+
+         var topic = message.destinationName;
+             var payload = message.payloadString;
+   //alert(payload);
+     var data=JSON.parse(payload);
+    
+
+    }
+
+     function onLogout()
+     {
+      rc=false;
+      mqtt.disconnect();
+
+     }
+    function onSend(a)//not used
+
+    {
+
+      message = new Paho.MQTT.Message(a);
+    message.destinationName = "public_dist/send";
+    message.qos=0;
+    mqtt.send(message); 
+    }
+
+
+    window.onload = function() {
+           MQTTconnect();
+         //  $('#gif-mp4').play();
+};
+
+
+
+
+$(document).ready(function(){
+
+$('#vote1').hide();
+$('#regbtn').click(function(){
+
+
+    $.ajax({
+cache: false,
+    type: "GET",
+  url: "./REST/reg.php?"+$('#form1').serialize(),
+  error: function(html)
+{
+
+
+
+},
+  success: function(html){
+
+ if(html=="0")
+  {
+    alert("successfully Registered");
+     $('#form1')[0].reset();
+    
+  }else{
+    alert("Error");
+  }
+ 
+  }});
+
+
+
+});
+
+$('#verify').click(function(){
+
+
+    $.ajax({
+cache: false,
+    type: "GET",
+  url: "./REST/verify.php?"+$('#form2').serialize(),
+  error: function(html)
+{
+
+
+
+},
+  success: function(html){
+
+ if(html=="-1")
+  {
+
+    $('#status1').html("Verify faied");
+    $('#vote1').hide();
+
+  }else
+  {
+    
+    data=JSON.parse(html);
+    $('#name').html("Name:"+data['name']);
+    $('#mob').html("Mobile:"+data['mobile']);
+    if(data['age']<18)
+    {
+      $('#status1').html("Verify faied:age should be above 18");
+      $('#vote1').hide();
+    }
+else
+{
+   $('#status1').html("Verify success procced to Vote");
+   $('#status1').removeClass('alert-danger');
+   $('#status1').addClass('alert-success');
+   $('#vote1').show();
+   
+}
+    
+
+  }
+ 
+  }});
+
+function vote(id,adhar){
+
+ $.ajax({
+cache: false,
+    type: "GET",
+  url: "./REST/vote.php?adhar_id="+adhar+"&vote="+id,
+  error: function(html)
+{
+
+
+
+},
+  success: function(html){
+
+ if(html=="0")
+  {
+    alert("successfully Votted..");
+  }else{
+    alert("Duplicate vote");
+  }
+ 
+  }});
+
+}
+
+$('#v1').click(function(){
+vote('A',$('#adhar').val());
+});
+
+$('#v2').click(function(){
+  vote('B',$('#adhar').val());
+});
+
+
+$('#v3').click(function(){
+  vote('C',$('#adhar').val());
+});
+
+
+});
+
+
+
+
+
+
+
+
+});
+
   </script>
 </html>

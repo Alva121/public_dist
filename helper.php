@@ -18,7 +18,7 @@ if ($_SESSION['login']==true || ($email=="admin@gmail.com" && $password=="passwo
 function vieworder()
 {
   include "db.php";
-$result=mysqli_query($conn,"select * from order_list  order by id desc");
+$result=mysqli_query($conn,"select * from order_list where status='0'  order by id desc");
 while($row= mysqli_fetch_array($result))
 {
   ?>
@@ -29,11 +29,27 @@ while($row= mysqli_fetch_array($result))
       <td><?php echo $row["3"]; ?></td>
       <td><?php echo $row["4"]; ?></td>
       <td>
-      	<a href="?deleteorder=<?php echo $row[1]; ?>" name="deleteorder" class="btn btn-danger">Delete</a>
+      	<a href="?deliverorder=<?php echo $row[0]; ?>" name="deliverorder" class="btn btn-danger">Deliver</a>
     </tr>
 <?php
 }}
 
+//deliver Item
+function deliverorder($id)
+{
+
+  include "db.php";
+
+$result=mysqli_query($conn,"UPDATE `order_list` SET status='1'  WHERE id='$id'");
+if($result)
+  {
+  echo "<script>alert('Updated successful');</script>";
+  }
+else
+  {
+   echo "<script>alert('Try again');</script>";
+  }
+}
 
 // view item
 function viewitem()
